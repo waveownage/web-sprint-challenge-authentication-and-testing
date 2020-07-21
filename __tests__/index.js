@@ -1,25 +1,36 @@
 const supertest = require("supertest")
-const server = require("../index")
-const db = require("../data/config")
+const server = require("../api/server")
+const db = require("../database/dbConfig")
 
-beforeEach(async () => {
-    await db.seed.run()
-})
 
-afterAll(async () => {
-    await db.destroy()
-})
 
-describe("Register and Login Tests", () => {
+
+describe("Tests", () => {
 
     it("POST /register", async () => {
         const res = await supertest(server)
-        .post("/register") 
-        .send({ username: "bilbo"})
-        expect(res.statusCode).toBe(201)
+        .post("/api/auth/register") 
+        .send({ username: "andre", password: "1234"})
         expect(res.headers["content-type"]).toBe("application/json; charset=utf-8")
-        expect(res.body.id).toBeDefined()
-        expect(res.body.name).toBe("bilbo")
+        expect(res.body.username).toBe("andre")
+        expect(res.statusCode).toBe(201)
 
+
+    })
+
+    it("POST /login", async () => {
+		const res = await supertest(server)
+			.post("/api/auth/login")
+            .send({ username: "andre", password: "1234" })
+        expect(res.body.message).toBe("Welcome andre!")
+        expect(res.headers["content-type"]).toBe("application/json; charset=utf-8")
+        expect(res.statusCode).toBe(200)
+    })
+
+    it("GET /jokes", async () => {
+		const res = await supertest(server)
+            .get("/api/jokes")
+        expect(res.statusCode).toBe(200)
+        expect(res.headers["content-type"]).toBe("application/json; charset=utf-8")
     })
 })
