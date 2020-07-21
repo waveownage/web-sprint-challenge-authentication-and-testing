@@ -2,7 +2,7 @@ const router = require('express').Router();
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const restrict = require("./authenticate-middleware")
-
+const Users = require("./model")
 
 
 
