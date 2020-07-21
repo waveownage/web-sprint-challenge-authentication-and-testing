@@ -1,4 +1,9 @@
 const router = require('express').Router();
+const bcrypt = require("bcryptjs")
+const jwt = require("jsonwebtoken")
+const restrict = require("./authenticate-middleware")
+
+
 
 
 router.post("/register", async (req, res, next) => {
@@ -14,7 +19,7 @@ router.post("/register", async (req, res, next) => {
 
 		const newUser = await Users.add({
 			username,
-			// hash the password with a time complexity of "5"
+
 			password: await bcrypt.hash(password, 5),
 		})
 
@@ -24,8 +29,35 @@ router.post("/register", async (req, res, next) => {
 	}
 })
 
-router.post('/login', (req, res) => {
-  // implement login
-});
+router.post("/login", async (req, res, next) => {
+	try {
+		const { username, password } = req.body
+		const user = await Users.findBy({ username }).first()
+		
+		if (!user) {
+			return res.status(401).json({
+				message: "Invalid Credentials",
+			})
+		}
+		const passwordValid = await bcrypt.compare(password, user.password)
+
+		if (!passwordValid) {
+			return res.status(401).json({
+				message: "Invalid Credentials",
+			})
+		}
+
+		const payload = {
+			userId: user.id,
+			username: user.username,
+		}
+		res.cookie("token", jwt.sign(payload, process.env.JWT_SECRET))
+		res.json({
+			message: `Welcome ${user.username}!`,
+		})
+	} catch(err) {
+		next(err)
+	}
+})
 
 module.exports = router;
